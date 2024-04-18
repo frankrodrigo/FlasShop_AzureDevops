@@ -50,8 +50,6 @@ stages:
 
     - script: echo "Please approve the deployment to Staging." > approval.txt
       displayName: 'Create approval file'
-      condition: and(succeeded(), eq(stageDependencies.Developer.result, 'Succeeded'))
-      continueOnError: true
 
     - task: PowerShell@2
       displayName: 'Manual Approval for Staging Deployment'
@@ -79,8 +77,6 @@ stages:
 
     - script: echo "Please approve the deployment to Production." > approval.txt
       displayName: 'Create approval file'
-      condition: and(succeeded(), eq(stageDependencies.Staging.result, 'Succeeded'))
-      continueOnError: true
 
     - task: PowerShell@2
       displayName: 'Manual Approval for Production Deployment'
