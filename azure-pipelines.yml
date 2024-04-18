@@ -68,3 +68,34 @@ stages:
               # Run the container with the specified name
               sudo docker run -d -p 5010:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
             displayName: 'Deploy Docker image to Staging Environment'
+
+- stage: Production
+  displayName: 'Production Environment'
+  dependsOn: Staging
+  condition: succeeded('Staging')
+  jobs:
+  - deployment: Deploy_to_Production
+    displayName: 'Deploy to Production'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: PowerShell@2  # Explicitly specifying PowerShell task type
+            displayName: 'Manual Approval for Production Deployment'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Please approve the deployment to Production."
+
+          - script: |
+              # Define a name for the container
+              CONTAINER_NAME="flask-app-container-production"
+              
+              # Stop and remove the container if it exists
+              sudo docker stop "$CONTAINER_NAME" || true
+              sudo docker rm "$CONTAINER_NAME" || true
+              
+              # Run the container with the specified name
+              sudo docker run -d -p 5050:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
+            displayName: 'Deploy Docker image to Production Environment'
