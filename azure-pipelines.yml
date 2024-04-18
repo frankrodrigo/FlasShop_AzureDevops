@@ -1,5 +1,5 @@
 trigger:
-- master
+- main
 
 pool:
   name: Default
@@ -18,7 +18,7 @@ steps:
     repository: 'flask-app'
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'  # Path to the Dockerfile in the repository
-    tags: '$(Build.SourceBrachName)-$(Build.BuildId)'
+    tags: '$(Build.SourceBranchName:refs/heads/=/)-$(Build.BuildId)'  # Replace slashes with underscores
 
 - script: |
     # Define a name for the container
@@ -29,5 +29,5 @@ steps:
     sudo docker rm "$CONTAINER_NAME" || true
     
     # Run the container with the specified name
-    sudo docker run -d -p 5000:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app:$(Build.SourceBrachName)-$(Build.BuildId)
+    sudo docker run -d -p 5000:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app:$(Build.SourceBranchName:refs/heads/=/)-$(Build.BuildId)
   displayName: 'Deploy Docker image to self-hosted agent'
