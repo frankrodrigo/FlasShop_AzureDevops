@@ -21,7 +21,10 @@ steps:
     tags: '$(Build.BuildId)'
 
 - script: |
-    sudo docker stop flask-app-container || true
-    sudo docker rm flask-app-container || true
-    sudo docker run -d -p 5000:5000 --name flask-app-container dev01.azurecr.io/flask-app:$(Build.BuildId)
+    CONTAINER_ID=$(sudo docker ps -qf ancestor=dev01.azurecr.io/flask-app)
+    if [ ! -z "$CONTAINER_ID" ]; then
+      sudo docker stop "$CONTAINER_ID" || true
+      sudo docker rm "$CONTAINER_ID" || true
+    fi
+    sudo docker run -d -p 5000:5000 dev01.azurecr.io/flask-app:$(Build.BuildId)
   displayName: 'Deploy Docker image to self-hosted agent'
