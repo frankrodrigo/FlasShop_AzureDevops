@@ -131,7 +131,7 @@ def register():
         )
 
         # Check if the user should be an admin (based on email)
-        if email == "example_email@email.com":
+        if email == "admin@flaskshop.com":
             new_user.is_admin = True
 
         # Add new user to the database
