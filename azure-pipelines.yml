@@ -4,30 +4,90 @@ trigger:
 pool:
   name: Default
 
-steps:
-- task: Docker@2
-  displayName: 'Docker login'
-  inputs:
-    command: 'login'
-    containerRegistry: 'dev01conn'  # Use the name of your Azure DevOps service connection
+stages:
+- stage: Developer
+  displayName: 'Developer Environment'
+  jobs:
+  - job: Build_and_Deploy_Developer
+    displayName: 'Build and Deploy to Developer'
+    steps:
+    - task: Docker@2
+      displayName: 'Docker login'
+      inputs:
+        command: 'login'
+        containerRegistry: 'dev01conn'  # Use the name of your Azure DevOps service connection
 
-- task: Docker@2
-  displayName: 'Build and push Docker image'
-  inputs:
-    containerRegistry: 'dev01conn'  # Use the name of your Azure DevOps service connection
-    repository: 'flask-app'
-    command: 'buildAndPush'
-    Dockerfile: '**/Dockerfile'  # Path to the Dockerfile in the repository
-    tags: '$(Build.BuildId)'
+    - task: Docker@2
+      displayName: 'Build and push Docker image'
+      inputs:
+        containerRegistry: 'dev01conn'  # Use the name of your Azure DevOps service connection
+        repository: 'flask-app-developer'
+        command: 'buildAndPush'
+        Dockerfile: '**/Dockerfile'  # Path to the Dockerfile in the repository
+        tags: '$(Build.SourceBranchName)-$(Build.BuildId)'
 
-- script: |
-    # Define a name for the container
-    CONTAINER_NAME="flask-app-container"
-    
-    # Stop and remove the container if it exists
-    sudo docker stop "$CONTAINER_NAME" || true
-    sudo docker rm "$CONTAINER_NAME" || true
-    
-    # Run the container with the specified name
-    sudo docker run -d -p 5000:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app:$(Build.BuildId)
-  displayName: 'Deploy Docker image to self-hosted agent'
+    - script: |
+        # Define a name for the container
+        CONTAINER_NAME="flask-app-container-developer"
+        
+        # Stop and remove the container if it exists
+        sudo docker stop "$CONTAINER_NAME" || true
+        sudo docker rm "$CONTAINER_NAME" || true
+        
+        # Run the container with the specified name
+        sudo docker run -d -p 5000:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
+      displayName: 'Deploy Docker image to Developer Environment'
+
+- stage: Staging
+  displayName: 'Staging Environment'
+  dependsOn: Developer
+  condition: succeeded('Developer')
+  jobs:
+  - job: Build_and_Deploy_Staging
+    displayName: 'Build and Deploy to Staging'
+    steps:
+    - task: PowerShell@2  # Explicitly specifying PowerShell task type
+      displayName: 'Manual Approval for Staging Deployment'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "Please approve the deployment to Staging."
+
+    - script: |
+        # Define a name for the container
+        CONTAINER_NAME="flask-app-container-staging"
+        
+        # Stop and remove the container if it exists
+        sudo docker stop "$CONTAINER_NAME" || true
+        sudo docker rm "$CONTAINER_NAME" || true
+        
+        # Run the container with the specified name
+        sudo docker run -d -p 5010:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
+      displayName: 'Deploy Docker image to Staging Environment'
+
+- stage: Production
+  displayName: 'Production Environment'
+  dependsOn: Staging
+  condition: succeeded('Staging')
+  jobs:
+  - job: Build_and_Deploy_Production
+    displayName: 'Build and Deploy to Production'
+    steps:
+    - task: PowerShell@2  # Explicitly specifying PowerShell task type
+      displayName: 'Manual Approval for Production Deployment'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "Please approve the deployment to Production."
+
+    - script: |
+        # Define a name for the container
+        CONTAINER_NAME="flask-app-container-production"
+        
+        # Stop and remove the container if it exists
+        sudo docker stop "$CONTAINER_NAME" || true
+        sudo docker rm "$CONTAINER_NAME" || true
+        
+        # Run the container with the specified name
+        sudo docker run -d -p 8080:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
+      displayName: 'Deploy Docker image to Production Environment'
