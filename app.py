@@ -39,6 +39,48 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
 
+
+    # Function to prepopulate the database with products
+    def populate_products():
+        products_data = [
+            {
+                'name': 'iPhone 15',
+                'description': 'The latest iPhone model with advanced features.',
+                'price': 999.99,
+                'image_url': 'https://lookagain.scene7.com/is/image/OttoUK/553w/sim-free-apple-iphone-15-pro-max-1tb---blue-titanium~95E285FRSP.jpg'
+            },
+            {
+                'name': 'Samsung Galaxy S24',
+                'description': 'A flagship smartphone from Samsung.',
+                'price': 899.99,
+                'image_url': 'https://cdn.dxomark.com/wp-content/uploads/medias/post-165758/Samsung-Galaxy-S24_-featured-image-packshot-review-Recovered-Recovered.jpg'
+            },
+            {
+                'name': 'Google Pixel 7',
+                'description': 'Google\'s latest Pixel phone with exceptional camera capabilities.',
+                'price': 799.99,
+                'image_url': 'https://bsmedia.business-standard.com/_media/bs/img/article/2022-10/06/full/1665050295-967.jpg?im=FeatureCrop,size=(826,465)'
+            }
+        ]
+
+        # Add each product to the database
+        for product_data in products_data:
+            product = Product(
+                name=product_data['name'],
+                description=product_data['description'],
+                price=product_data['price'],
+                image_url=product_data['image_url']
+            )
+            db.session.add(product)
+
+        # Commit the changes to the database
+        db.session.commit()
+
+    # Check if products exist in the database, if not, populate them
+    if not Product.query.all():
+        populate_products()
+
+
 def admin_required(func):
     """
     Decorator function to ensure the user is an admin.
