@@ -38,26 +38,29 @@ stages:
   dependsOn: Developer
   condition: succeeded('Developer')
   jobs:
-  - deployment: Deploy
-    displayName: 'Deploy to Staging'
-    pool:
-      vmImage: 'ubuntu-20.04'
-    environment: staging
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: ManualValidation@1
-            displayName: 'Manual Approval for Staging Deployment'
-            inputs:
-              instructions: 'Please approve the deployment to Staging.'
+  - job: Build_and_Deploy_Staging
+    displayName: 'Build and Deploy to Staging'
+    steps:
+    - script: |
+        CONTAINER_NAME="flask-app-container-staging"
+        sudo docker stop "$CONTAINER_NAME" || true
+        sudo docker rm "$CONTAINER_NAME" || true
+        sudo docker run -d -p 5010:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
+      displayName: 'Deploy Docker image to Staging Environment'
 
-          - script: |
-              CONTAINER_NAME="flask-app-container-staging"
-              sudo docker stop "$CONTAINER_NAME" || true
-              sudo docker rm "$CONTAINER_NAME" || true
-              sudo docker run -d -p 5010:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
-            displayName: 'Deploy Docker image to Staging Environment'
+    - script: echo "Please approve the deployment to Staging." > approval.txt
+      displayName: 'Create approval file'
+      condition: and(succeeded(), eq(stageDependencies.Developer.result, 'Succeeded'))
+      continueOnError: true
+
+    - task: PowerShell@2
+      displayName: 'Manual Approval for Staging Deployment'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $content = Get-Content approval.txt
+          Write-Host $content
+          Write-Host "To approve the deployment, please execute the necessary steps and mark the stage as succeeded."
 
 - stage: Production
   displayName: 'Production Environment'
@@ -67,14 +70,23 @@ stages:
   - job: Build_and_Deploy_Production
     displayName: 'Build and Deploy to Production'
     steps:
-    - task: ManualValidation@1
-      displayName: 'Manual Approval for Production Deployment'
-      inputs:
-        instructions: 'Please approve the deployment to Production.'
-
     - script: |
         CONTAINER_NAME="flask-app-container-production"
         sudo docker stop "$CONTAINER_NAME" || true
         sudo docker rm "$CONTAINER_NAME" || true
         sudo docker run -d -p 5050:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
       displayName: 'Deploy Docker image to Production Environment'
+
+    - script: echo "Please approve the deployment to Production." > approval.txt
+      displayName: 'Create approval file'
+      condition: and(succeeded(), eq(stageDependencies.Staging.result, 'Succeeded'))
+      continueOnError: true
+
+    - task: PowerShell@2
+      displayName: 'Manual Approval for Production Deployment'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $content = Get-Content approval.txt
+          Write-Host $content
+          Write-Host "To approve the deployment, please execute the necessary steps and mark the stage as succeeded."
