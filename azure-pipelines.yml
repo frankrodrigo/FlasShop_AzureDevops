@@ -89,5 +89,5 @@ stages:
         sudo docker rm "$CONTAINER_NAME" || true
         
         # Run the container with the specified name
-        sudo docker run -d -p 8080:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
+        sudo docker run -d -p 5050:5000 --name "$CONTAINER_NAME" dev01.azurecr.io/flask-app-developer:$(Build.SourceBranchName)-$(Build.BuildId)
       displayName: 'Deploy Docker image to Production Environment'
