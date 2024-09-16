@@ -1,4 +1,15 @@
-# eCommerce Flask Application
+# eCommerce Flask Application Deployed in a Containerized Environment Automated with Azure DevOps.
+
+- This project automates the deployment of a Flask application using Azure DevOps.
+- The containers are deployed using self-hosted agents.
+- The application is deployed across three environments: development, staging, and production.
+- Deployments to the staging and production environments require approval from an authorized user via a Slack channel.
+
+
+
+
+
+## Web Application based on https://github.com/MariosAvraam/online-shop.git repository.
 
 This repository contains a simple eCommerce web application built with Flask. Users can register, login, view products, add products to their cart, and checkout. Administrators have additional capabilities to add, edit, or delete products.
 
