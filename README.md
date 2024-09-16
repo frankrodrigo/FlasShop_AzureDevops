@@ -5,9 +5,9 @@
 - The application is deployed across three environments: development, staging, and production.
 - Deployments to the staging and production environments require approval from an authorized user via a Slack channel.
 
+![Project Diagram 1](https://github.com/frankrodrigo/FlasShop_AzureDevops/blob/master/assets/Devops_Project_Diagram1.png?raw=true)
 
-
-
+![Project Diagram 2](https://github.com/frankrodrigo/FlasShop_AzureDevops/blob/master/assets/Devops_Project_Diagram1_V3.png?raw=true)
 
 ## Web Application based on repository:
 https://github.com/MariosAvraam/online-shop.git 
